@@ -1,0 +1,8 @@
+{
+  "num_blocks": 12,
+  "width_factor": 1,
+  "kernel_size": 15,
+  "stride": 4,
+  "se": true,
+  "dropout_rate": 0.2
+}

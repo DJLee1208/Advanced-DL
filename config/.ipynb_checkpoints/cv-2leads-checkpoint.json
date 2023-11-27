@@ -1,0 +1,7 @@
+{
+  "path": "config/",
+  "datasets": ["Ningbo", "PTB-XL", "Chapman", "G12EC", "CPSC", "CPSC-Extra"],
+  "leads": ["I", "II"],
+  "chunk_length": 7500,
+  "chunk_stride": 5000
+}
