@@ -19,8 +19,8 @@ class Norm(nn.Module):
                                      no_stats)
         self.model_state = deepcopy(self.model.state_dict())
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x, features):
+        return self.model(x, features)
 
     def reset(self):
         self.model.load_state_dict(self.model_state, strict=True)
@@ -48,7 +48,7 @@ def collect_stats(model):
 def configure_model(model, eps, momentum, reset_stats, no_stats):
     """Configure model for adaptation by test-time normalization."""
     for m in model.modules():
-        if isinstance(m, nn.BatchNorm2d):
+        if isinstance(m, nn.BatchNorm1d):
             # use batch-wise statistics in forward
             m.train()
             # configure epsilon for stability, and momentum for updates
