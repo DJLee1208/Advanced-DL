@@ -1,5 +1,5 @@
 {
-  "path": "config/",
+  "path": "config/Chapman/",
   "datasets": ["Chapman"],
   "leads": ["I", "II"],
   "chunk_length": 7500,

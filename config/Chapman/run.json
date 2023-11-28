@@ -1,0 +1,7 @@
+{
+  "batch_size": 128,
+  "num_epochs": 100,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0005,
+  "mixup": true
+}

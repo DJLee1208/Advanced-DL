@@ -1,5 +1,5 @@
 {
-  "path": "config/",
+  "path": "config/G12EC/",
   "datasets": ["G12EC"],
   "leads": ["I", "II", "III", "V2"],
   "chunk_length": 7500,

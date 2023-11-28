@@ -1,0 +1,1 @@
+auroc 0.763, auprc 0.334acc 0.276f score 0.270challenge metric: 0.05266495103231722

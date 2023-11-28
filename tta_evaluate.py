@@ -19,9 +19,12 @@ def evaluate_tta(source, target):
     method : source, 
     """
     print(f"Source: {source}, Target: {target}")
+    if not os.path.exists(f'results/{source}-{target}'):
+        os.mkdir(f'results/{source}-{target}')
     
     # leads configuration
-    leads_cfg = [2, 3, 4, 6, 12]
+    #leads_cfg = [2, 3, 4, 6, 12]
+    leads_cfg = [12]
     
     for num_leads in leads_cfg:
         print(f" ### Leads: {num_leads}")
@@ -70,14 +73,14 @@ def evaluate_tta(source, target):
         
         ### source method : use base model trained by source dataset
         print('1. Baseline...')
-        fpath = f'base_{source}-{target}_{num_leads}_leads'
+        fpath = f'{source}-{target}/base_{num_leads}_leads'
         evaluate_test(model, iterator_train, fpath)
         
         ### norm method : adjusting batch normalization on test batch
         # norm model
         print('2. Norm method...')
         norm_model = norm.Norm(model)
-        fpath = f'norm_{source}-{target}_{num_leads}_leads'
+        fpath = f'{source}-{target}/norm_{num_leads}_leads'
         evaluate_test(norm_model, iterator_train, fpath)
 
         ### tent method (episodic) : tent method episodic adaptation
@@ -86,14 +89,14 @@ def evaluate_tta(source, target):
         print('3. Tent - episodic method...')
         tent_episodic = True
         tented_model = tent.Tent(model, optimizer, episodic=tent_episodic)
-        fpath = f'tent-episodic_{source}-{target}_{num_leads}_leads'
+        fpath = f'{source}-{target}/tent-episodic_{num_leads}_leads'
         evaluate_test(tented_model, iterator_train, fpath)
 
         ### tent method (online) : tent method online adaptation
         print('4. Tent - online method...')
         tent_episodic = False
         tented_model = tent.Tent(model, optimizer, episodic=tent_episodic)
-        fpath = f'tent-online_{source}-{target}_{num_leads}_leads'
+        fpath = f'{source}-{target}/tent-online_{num_leads}_leads'
         evaluate_test(tented_model, iterator_train, fpath)
         
         ### memo method
