@@ -1,5 +1,6 @@
-import torch, os, shutil
+import torch, os, shutil, re
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 #import data_aggregation
@@ -11,9 +12,10 @@ from src.model.model import ECG_model
 from tent import tent, norm
 import torch.nn.functional as F
 from src.evaluate import *
+from collections import OrderedDict
 
 
-def evaluate_tta(source, target):
+def evaluate_tta(source, target, cuda_device):
     """
     Evaluate the performance of the model trained on source data using TTA method.
     method : source, 
@@ -45,7 +47,7 @@ def evaluate_tta(source, target):
         preprocess_cfg = config.PreprocessConfig("config/preprocess.json")
         model_cfg = config.ModelConfig("config/model.json")
         run_cfg = config.RunConfig("config/run.json")
-        device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+        device = torch.device(cuda_device if torch.cuda.is_available() else "cpu")
         print('Done.') 
         
         # load train set
@@ -57,50 +59,67 @@ def evaluate_tta(source, target):
         iterator_train = torch.utils.data.DataLoader(dataset_train, run_cfg.batch_size, #collate_fn=collate_into_list,
                                                             shuffle=True, pin_memory=True, num_workers=4)
         
-        
-        ## initialize a model
+        ## Load trained model on source domain (team_code.py의 load_model 함수 코드)
+        model_directory = f'model/{source}'
         model, params = get_model(model_cfg, len(data_cfg.leads), len(data_cfg.scored_classes))
-        get_profile(model, len(data_cfg.leads), data_cfg.chunk_length)
-
-        state_dict = torch.load(f'model/{source}/{num_leads}leads_model.pt')
-        model.load_state_dict(state_dict)
-
-        model = tent.configure_model(model)
-        params, param_names = tent.collect_params(model)
-        optimizer = torch.optim.Adam([{'params': params[0], 'weight_decay': run_cfg.weight_decay},
-                                    {'params': params[1], 'weight_decay': 0}])
+        checkpoint = torch.load(os.path.join(model_directory, '%dleads_model.pt' % len(data_cfg.leads)),
+                            map_location=torch.device("cpu"))
+        state_dict = OrderedDict()
+        for k, v in checkpoint.items():
+            if k.startswith("module."): k = k[7:]
+            state_dict[k] = v
+        model.load_state_dict(state_dict, strict=False)
+        
+        #get_profile(model, len(data_cfg.leads), data_cfg.chunk_length)
+        #state_dict = torch.load(f'model/{source}/{num_leads}leads_model.pt')
+        #model.load_state_dict(state_dict)
         print('Done')
         
         ### source method : use base model trained by source dataset
         print('1. Baseline...')
         fpath = f'{source}-{target}/base_{num_leads}_leads'
-        evaluate_test(model, iterator_train, fpath)
+        result1 = evaluate_test(model, iterator_train, fpath)
+        
         
         ### norm method : adjusting batch normalization on test batch
         # norm model
         print('2. Norm method...')
         norm_model = norm.Norm(model)
         fpath = f'{source}-{target}/norm_{num_leads}_leads'
-        evaluate_test(norm_model, iterator_train, fpath)
+        result2 = evaluate_test(norm_model, iterator_train, fpath)
 
-        ### tent method (episodic) : tent method episodic adaptation
-        # https://github.com/DequanWang/tent
-        # model is reset after each test batch
-        print('3. Tent - episodic method...')
-        tent_episodic = True
-        tented_model = tent.Tent(model, optimizer, episodic=tent_episodic)
-        fpath = f'{source}-{target}/tent-episodic_{num_leads}_leads'
-        evaluate_test(tented_model, iterator_train, fpath)
-
+        
         ### tent method (online) : tent method online adaptation
-        print('4. Tent - online method...')
+        print('3. Tent - online method...')
+        model = tent.configure_model(model)
+        params, param_names = tent.collect_params(model)
+        optimizer = torch.optim.Adam([{'params': params[0], 'weight_decay': run_cfg.weight_decay},
+                                    {'params': params[1], 'weight_decay': 0}])
+        
         tent_episodic = False
         tented_model = tent.Tent(model, optimizer, episodic=tent_episodic)
         fpath = f'{source}-{target}/tent-online_{num_leads}_leads'
-        evaluate_test(tented_model, iterator_train, fpath)
+        result3 = evaluate_test(tented_model, iterator_train, fpath)
         
+        
+        ### tent method (episodic) : tent method episodic adaptation
+        # https://github.com/DequanWang/tent
+        # model is reset after each test batch
+        print('4. Tent - episodic method...')
+
+        tent_episodic = True
+        tented_model = tent.Tent(model, optimizer, episodic=tent_episodic)
+        fpath = f'{source}-{target}/tent-episodic_{num_leads}_leads'
+        result4 = evaluate_test(tented_model, iterator_train, fpath)
+
+
         ### memo method
         #print('5. Memo method...')
+        
+        
+        # Save total results in csv format
+        results = pd.concat([result1, result2, result3, result4], axis=0)
+        results.to_csv(f'{source}-{target}/results.csv', index=False)
         
     
 # Inference
@@ -132,7 +151,7 @@ def evaluate_test(model, iterator_train, fpath):
     np.savez(f'results/{fpath}.npz', scalar = np.array(scalars), binary = np.array(binaries), labels = np.array(true_labels))
 
     # evaluate and save results
-    evaluate_score(np.array(scalars), np.array(binaries), np.array(true_labels), fpath)
+    return evaluate_score(np.array(scalars), np.array(binaries), np.array(true_labels), fpath)
     
     
 # Evaluate the performance and save the results
@@ -160,13 +179,29 @@ def evaluate_score(scalar_outputs, binary_outputs, labels, fpath):
     challenge_metric = compute_challenge_metric(weights, labels, binary_outputs, classes, sinus_rhythm)
     print(f'challenge metric: {challenge_metric}')
     
+    # Save result in a txt file
     with open(f"results/{fpath}_{challenge_metric:.3f}.txt", 'w') as f:
+        f.write(f'file: {fpath}')
         f.write(f'auroc {auroc:.3f}, auprc {auprc:.3f}')
         f.write(f'acc {accuracy:.3f}')
         f.write(f'f score {f_measure:.3f}')
         f.write(f'challenge metric: {challenge_metric}')
     
+    # Save results in a dataframe
+    # Regular expression to match the pattern and extract source, target, and method
+    pattern = r'(?P<source>[^-]+)-(?P<target>[^/]+)/(?P<method>[^_]+)_12_leads'
+    match = re.match(pattern, fpath)
+
+    if match:
+        source = match.group('source')
+        target = match.group('target')
+        method = match.group('method')
+    
+    df_result = pd.DataFrame({'source': [source], 'target': [target], 'method': [method], 'auroc': [auroc], 'auprc': [auprc], 'challenge score': [challenge_metric], 'accuracy': [accuracy], 'f score': [f_measure]})
+
     print('Done.')
+    
+    return df_result
     
     
 def copy_files(source_dir, goal_dir, file_extensions):
@@ -189,3 +224,6 @@ def copy_files(source_dir, goal_dir, file_extensions):
 
                 if not os.path.exists(goal_file_path):
                     shutil.copy2(source_file_path, goal_file_path)
+                    
+                    
+    
