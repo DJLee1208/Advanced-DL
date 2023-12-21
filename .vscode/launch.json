@@ -16,13 +16,13 @@
             "name": "test_model.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/Advanced DL/physionet_DSAIL/test_model.py",
+            "program": "${workspaceFolder}/physionet_DSAIL/test_model.py",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0"
             },
             "args": [
                 "/home/dongjun/data/physionet_dsail/Chapman",
-                "${workspaceFolder}/Advanced DL/physionet_DSAIL/model_Ningbo_test"
+                "${workspaceFolder}/physionet_DSAIL/model_Ningbo_test"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -31,16 +31,16 @@
             "name": "train_model.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/Advanced DL/physionet_DSAIL/train_model.py",
+            "program": "${workspaceFolder}/physionet_DSAIL/train_model.py",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0"
             },
             "args": [
                 "/home/dongjun/data/physionet_aggr",
-                "${workspaceFolder}/Advanced DL/physionet_DSAIL/model_dj"
+                "${workspaceFolder}/physionet_DSAIL/model_dj"
             ],
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/Advanced DL/physionet_DSAIL/",
+            "cwd": "${workspaceFolder}/physionet_DSAIL/",
             "justMyCode": true
         }
     ]
