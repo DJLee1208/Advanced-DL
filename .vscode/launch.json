@@ -21,8 +21,9 @@
                 "CUDA_VISIBLE_DEVICES": "0"
             },
             "args": [
+                "${workspaceFolder}/physionet_DSAIL/model_Ningbo/12leads_model.pt",
                 "/home/dongjun/data/physionet_dsail/Chapman",
-                "${workspaceFolder}/physionet_DSAIL/model_Ningbo_test"
+                "${workspaceFolder}/physionet_DSAIL/test_result"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
