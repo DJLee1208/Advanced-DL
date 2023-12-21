@@ -1,0 +1,7 @@
+numpy==1.19.4
+scipy==1.5.4
+scikit-learn==0.24.1
+torch==1.8.0
+gpuinfo==1.0.0a7
+tensorboard==1.15.0
+thop==0.0.31-2005241907

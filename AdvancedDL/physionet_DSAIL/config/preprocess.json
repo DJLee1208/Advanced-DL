@@ -1,0 +1,8 @@
+{
+"idx": "preprocess-band-minmax",
+"sample_rate": 500,
+"filter_highpass": [3],
+"filter_lowpass": [45],
+"filter_notch": [],
+"scaler": "minmax"
+}

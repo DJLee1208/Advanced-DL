@@ -1,0 +1,7 @@
+{
+  "path": "config/",
+  "datasets": ["PTB-XL"],
+  "leads": ["I", "II", "V2"],
+  "chunk_length": 7500,
+  "chunk_stride": 5000
+}
