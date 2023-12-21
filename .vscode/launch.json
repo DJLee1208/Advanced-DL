@@ -1,0 +1,47 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "test_model.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/Advanced DL/physionet_DSAIL/test_model.py",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "/home/dongjun/data/physionet_dsail/Chapman",
+                "${workspaceFolder}/Advanced DL/physionet_DSAIL/model_Ningbo_test"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "train_model.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/Advanced DL/physionet_DSAIL/train_model.py",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "/home/dongjun/data/physionet_aggr",
+                "${workspaceFolder}/Advanced DL/physionet_DSAIL/model_dj"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/Advanced DL/physionet_DSAIL/",
+            "justMyCode": true
+        }
+    ]
+}
